@@ -27,7 +27,7 @@ public class UIController : MonoBehaviour
 
     public void SaveButton_OnClick()
     {
-        Texture2D texture = painter.GetScaledImage(128, 128);
+        Texture2D texture = painter.GetScaledImage(32, 32);
 
         string baseName = "image";
         string directory = Application.dataPath + "/SavedTextures";
