@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEngine.Networking;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using ConvNetSharp.Core;
 using ConvNetSharp.Core.Serialization;
 using ConvNetSharp.Core.Layers.Double;
@@ -44,22 +46,29 @@ public class ConvNet : MonoBehaviour
         return prediction[0];
     }
 
-    public void LoadNetwork()
+    public async void LoadNetwork()
     {
-        string filePath = Application.dataPath + "/convnet.json";
+        string filePath = Path.Combine(Application.streamingAssetsPath, "convnet.json");
 
-        try
+        UnityWebRequest request = UnityWebRequest.Get(filePath);
+        UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+
+        while (!operation.isDone)
         {
-            // Read the file content
-            string json = File.ReadAllText(filePath);
+            await Task.Yield();
+        }
+
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            string json = request.downloadHandler.text;
 
             var deserialized = SerializationExtensions.FromJson<double>(json);
 
             this.net = deserialized;
         }
-        catch (Exception ex)
+        else
         {
-            Debug.Log($"An error occurred while loading the file: {ex.Message}");
+            Debug.LogError("Cannot load file at " + filePath);
         }
     }
 }
