@@ -23,6 +23,9 @@ public class Painter : MonoBehaviour
     bool isDrawing = false;
     bool clearRequest = false;
 
+    public float drawTime = 0;
+    public bool shapeClassified = false;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -84,6 +87,9 @@ public class Painter : MonoBehaviour
                 previousDrawingPos = currentDrawingPos;
                 currentDrawingPos = position;
             }
+
+            drawTime = Time.time;
+            shapeClassified = false;
         }
         else
         {

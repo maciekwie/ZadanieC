@@ -21,7 +21,7 @@ def save_images_to_idx(images, output_file):
         images.tofile(f)
     print(f"Saved {num_images} images to {output_file}")
 
-def load_images_from_folder(folder, image_size=(28, 28)):
+def load_images_from_folder(folder, image_size=(32, 32)):
     """
     Loads all PNG images from a folder, converts them to grayscale,
     resizes them, and returns as a numpy array.
@@ -55,7 +55,7 @@ def compile(folder, output_file):
     save_images_to_idx(images, output_file)
 
 def main():
-    compile('Training', 'taining.data');
+    compile('Training', 'training.data');
     compile('Test', 'test.data');
 
 if __name__ == '__main__':

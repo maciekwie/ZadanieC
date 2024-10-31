@@ -18,8 +18,8 @@ public class DataSet
 
     public Tuple<Volume<double>, Volume<double>, int[]> NextBatch(int batchSize)
     {
-        const int w = 28;
-        const int h = 28;
+        const int w = 32;
+        const int h = 32;
         const int numClasses = 2;
 
         var dataShape = new Shape(w, h, 1, batchSize);

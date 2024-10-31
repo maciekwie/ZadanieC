@@ -1,33 +1,20 @@
 using UnityEngine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using ConvNetSharp.Core;
+using ConvNetSharp.Core.Serialization;
 using ConvNetSharp.Core.Layers.Double;
-using ConvNetSharp.Core.Training.Double;
 using ConvNetSharp.Volume;
 using ConvNetSharp.Volume.Double;
 
 
 public class ConvNet : MonoBehaviour
 {
-    private readonly CircularBuffer<double> testAccWindow = new CircularBuffer<double>(100);
-    private readonly CircularBuffer<double> trainAccWindow = new CircularBuffer<double>(100);
-
     private Net<double> net;
-    private int stepCount;
-    private SgdTrainer trainer;
-
-    private DataSets datasets;
-
-    bool training = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        datasets = new DataSets();
-        datasets.Load(3);
-
         // Create network
         this.net = new Net<double>();
         this.net.AddLayer(new InputLayer(32, 32, 1));
@@ -40,61 +27,39 @@ public class ConvNet : MonoBehaviour
         this.net.AddLayer(new FullyConnLayer(2));
         this.net.AddLayer(new SoftmaxLayer(2));
 
-        this.trainer = new SgdTrainer(this.net)
-        {
-            LearningRate = 0.01,
-            BatchSize = 20,
-            Momentum = 0.9
-        };
-
-        Debug.Log("Convolutional neural network learning...[Press any key to stop]");
-        training = true;
+        LoadNetwork();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(training)
-        {
-            var trainSample = datasets.Train.NextBatch(this.trainer.BatchSize);
-            Train(trainSample.Item1, trainSample.Item2, trainSample.Item3);
-
-            var testSample = datasets.Test.NextBatch(this.trainer.BatchSize);
-            Test(testSample.Item1, testSample.Item3, this.testAccWindow);
-
-            Debug.Log(String.Format("Loss: {0} Train accuracy: {1}% Test accuracy: {2}%", this.trainer.Loss,
-                Math.Round(this.trainAccWindow.Items.Average() * 100.0, 2),
-                Math.Round(this.testAccWindow.Items.Average() * 100.0, 2)));
-
-            Debug.Log(String.Format("Example seen: {0} Fwd: {1}ms Bckw: {2}ms", this.stepCount,
-                Math.Round(this.trainer.ForwardTimeMs, 2),
-                Math.Round(this.trainer.BackwardTimeMs, 2)));
-
-            training = false;
-        } 
+        
     }
 
-    private void Test(Volume<double> x, int[] labels, CircularBuffer<double> accuracy, bool forward = true)
+    public double DetectTriangle(Volume<double> image)
     {
-        if (forward)
-        {
-            this.net.Forward(x);
-        }
-
+        this.net.Forward(image);
         var prediction = this.net.GetPrediction();
-
-        for (var i = 0; i < labels.Length; i++)
-        {
-            accuracy.Add(labels[i] == prediction[i] ? 1.0 : 0.0);
-        }
+        
+        return prediction[0];
     }
 
-    private void Train(Volume<double> x, Volume<double> y, int[] labels)
+    public void LoadNetwork()
     {
-        this.trainer.Train(x, y);
+        string filePath = Application.dataPath + "/convnet.json";
 
-        Test(x, labels, this.trainAccWindow, false);
+        try
+        {
+            // Read the file content
+            string json = File.ReadAllText(filePath);
 
-        this.stepCount += labels.Length;
+            var deserialized = SerializationExtensions.FromJson<double>(json);
+
+            this.net = deserialized;
+        }
+        catch (Exception ex)
+        {
+            Debug.Log($"An error occurred while loading the file: {ex.Message}");
+        }
     }
 }

@@ -1,14 +1,24 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System;
 using System.IO;
+using System.Collections.Generic;
+using ConvNetSharp.Core;
+using ConvNetSharp.Core.Serialization;
+using ConvNetSharp.Volume;
+using ConvNetSharp.Volume.Double;
 
 public class UIController : MonoBehaviour
 {
     public Painter painter;
+    public ConvNet convNet;
+    public TextMeshProUGUI text;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        convNet.LoadNetwork();
     }
 
     // Update is called once per frame
@@ -17,6 +27,50 @@ public class UIController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
              Application.Quit();
+        }
+
+        if (Time.time - painter.drawTime > 1f)
+        {
+            if (painter.shapeClassified == false)
+            {
+                text.text = "Detecting...";
+
+                int width = 32;
+                int height = 32;
+
+                Texture2D texture = painter.GetScaledImage(width, height);
+
+                var dataShape = new Shape(width, height, 1, 1);
+                var data = new double[dataShape.TotalLength];
+
+                Volume<double> image = BuilderInstance.Volume.From(data, dataShape);
+
+                for (var y = 0; y < height; y++)
+                {
+                    for (var x = 0; x < width; x++)
+                    {
+                        Color color = texture.GetPixel(x, y);
+                        double pixelVal = (color.r + color.g + color.b) / 3.0;
+                        image.Set(x, y, 0, 0, pixelVal);
+                    }
+                }
+
+                double prediction = convNet.DetectTriangle(image);
+                if (prediction == 1)
+                {
+                    text.text = "Traingle";
+                }
+                else
+                {
+                    text.text = "No traingle";
+                }
+            }
+
+            painter.shapeClassified = true;
+        }
+        else
+        {
+            text.text = "Drawing";
         }
     }
 
