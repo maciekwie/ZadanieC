@@ -58,11 +58,11 @@ public class UIController : MonoBehaviour
                 double prediction = convNet.DetectTriangle(image);
                 if (prediction == 1)
                 {
-                    text.text = "Traingle";
+                    text.text = "Triangle";
                 }
                 else
                 {
-                    text.text = "No traingle";
+                    text.text = "No triangle";
                 }
             }
 

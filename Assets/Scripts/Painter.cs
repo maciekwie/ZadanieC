@@ -134,19 +134,12 @@ public class Painter : MonoBehaviour
             return;
         }
 
-        // Draw a texture tex inside a rect
-        Material guiTexMat = new Material(
-            Shader.Find("Hidden/Internal-GUITexture"));
-
-        //GL.Clear(false, true, Color.white);
-
         GL.PushMatrix();
-        mat.SetPass(0);
         GL.LoadOrtho();
 
         GL.Begin(GL.QUADS);
-        guiTexMat.SetTexture("_MainTex", outputTexture);
-        guiTexMat.SetPass(0);
+        mat.SetTexture("_MainTex", outputTexture);
+        mat.SetPass(0);
 
         Rect rect = new Rect(imageTransform.anchoredPosition.x / Screen.width,
             1 - (imageTransform.anchoredPosition.y / Screen.height),
