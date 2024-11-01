@@ -8,10 +8,11 @@ public class Painter : MonoBehaviour
     public Image image;
     public RectTransform imageTransform;
 
-    public RenderTexture renderTexture;
-    Texture2D outputTexture;
+    RenderTexture renderTexture;  // Texture, on which GL drawing is performed
+    Texture2D outputTexture;      // Used for accesing pixel data
 
     public Material mat;
+
     Vector3 previousDrawingPos;
     Vector3 currentDrawingPos;
     Vector3 mousePos;
@@ -29,7 +30,6 @@ public class Painter : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        //renderTexture = new RenderTexture((int)imageTransform.sizeDelta.x, (int)imageTransform.sizeDelta.y, 8);
         renderTexture = new RenderTexture((int)imageTransform.rect.width, (int)imageTransform.rect.height, 8);
         GetComponent<Camera>().targetTexture = renderTexture;
 
@@ -57,15 +57,10 @@ public class Painter : MonoBehaviour
         OnPostRender();
     }
 
-
-    void OnPostRenderCallback(Camera camera)
-    {
-        OnPostRender();
-    }
-
     public void ClearCanvas()
     {
         clearRequest = true;
+        shapeClassified = true;         // No need for classifying empty image
     }
 
     // Update is called once per frame
@@ -99,9 +94,8 @@ public class Painter : MonoBehaviour
             }
         }
 
-        
-        //RenderTexture.active = renderTexture
 
+        // Clear the canvas if needed
         if(clearRequest)
         {
             for(int x = 0; x < outputTexture.width; x++)
@@ -114,6 +108,7 @@ public class Painter : MonoBehaviour
 
             clearRequest = false;
         }
+        // Otherwise read the canvas content
         else
         {
             outputTexture.ReadPixels(new Rect(imageTransform.anchoredPosition.x,
@@ -137,6 +132,7 @@ public class Painter : MonoBehaviour
         GL.PushMatrix();
         GL.LoadOrtho();
 
+        // Draw canvas content
         GL.Begin(GL.QUADS);
         mat.SetTexture("_MainTex", outputTexture);
         mat.SetPass(0);
@@ -156,9 +152,10 @@ public class Painter : MonoBehaviour
         GL.Vertex3(rect.x + rect.width, rect.y, 0);
         GL.End();
 
+        // Perform drawing operation
         if(isDrawing)
         {
-            DrawThickLine(previousDrawingPos, new Vector3(mousePos.x / Screen.width, mousePos.y / Screen.height, 0), penSize, penColor);
+            DrawThickLine(previousDrawingPos, currentDrawingPos, penSize, penColor);
         }
 
         GL.PopMatrix();
